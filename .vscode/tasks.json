@@ -1,0 +1,12 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "type": "msbuild",
+      "problemMatcher": ["$msCompile"],
+      "group": "build",
+      "label": "Build: fndds.fsproj",
+      "detail": "Build the fndds.fsproj project using dotnet build"
+    }
+  ]
+}
