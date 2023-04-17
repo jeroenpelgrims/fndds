@@ -1,4 +1,6 @@
 .open food.db
+.mode csv
+
 CREATE TABLE nutrient(
   id INT PRIMARY KEY,
   name VARCHAR NOT NULL,
@@ -6,25 +8,34 @@ CREATE TABLE nutrient(
   nutient_nbr INT,
   rank INT
 );
+.import data/nutrient.csv nutrient
+
 CREATE TABLE food(
   fdc_id INT PRIMARY KEY,
   data_type VARCHAR NOT NULL,
   description VARCHAR NOT NULL
 );
+.import data/food.csv food
+
+CREATE TABLE temp_food_nutrient(
+  id INT,
+  fdc_id INT,
+  nutrient_id INT,
+  amount float,
+);
+.import data/food_nutrient.csv temp_food_nutrient
 CREATE TABLE food_nutrient(
   fdc_id INT,
   nutrient_id INT,
   amount float,
   CONSTRAINT PK_food_nutrient PRIMARY KEY (fdc_id, nutrient_id),
-  FOREIGN KEY(fdc_id) REFERENCES food(fdc_id),
-  FOREIGN KEY(nutient_id) REFERENCES nutient(id)
+  FOREIGN KEY(fdc_id) REFERENCES food(fdc_id) ON DELETE CASCADE,
+  FOREIGN KEY(nutrient_id) REFERENCES nutient(id) ON DELETE CASCADE
 );
+INSERT INTO food_nutrient(fdc_id, nutrient_id, amount)
+SELECT fdc_id, nutrient_id, amount
+FROM temp_food_nutrient;
+DROP TABLE temp_food_nutrient;
 
-.mode csv
-.import data/nutrient.csv nutrient
-.import data/food.csv food
-# .import food_nutrient.csv food_nutrient
-.schema food
-.schema nutrient
-# .schema food_nutrient
-# .quit
+DELETE FROM food WHERE data_type != 'sr_legacy_food';
+VACUUM;
