@@ -21,7 +21,7 @@ CREATE TABLE temp_food_nutrient(
   id INT,
   fdc_id INT,
   nutrient_id INT,
-  amount float,
+  amount float
 );
 .import data/food_nutrient.csv temp_food_nutrient
 CREATE TABLE food_nutrient(
@@ -30,7 +30,7 @@ CREATE TABLE food_nutrient(
   amount float,
   CONSTRAINT PK_food_nutrient PRIMARY KEY (fdc_id, nutrient_id),
   FOREIGN KEY(fdc_id) REFERENCES food(fdc_id) ON DELETE CASCADE,
-  FOREIGN KEY(nutrient_id) REFERENCES nutient(id) ON DELETE CASCADE
+  FOREIGN KEY(nutrient_id) REFERENCES nutient(id)
 );
 INSERT INTO food_nutrient(fdc_id, nutrient_id, amount)
 SELECT fdc_id, nutrient_id, amount
@@ -38,4 +38,10 @@ FROM temp_food_nutrient;
 DROP TABLE temp_food_nutrient;
 
 DELETE FROM food WHERE data_type != 'sr_legacy_food';
+DELETE FROM food_nutrient WHERE food_nutrient.fdc_id IN (
+  SELECT food_nutrient.fdc_id
+  FROM food_nutrient
+  LEFT OUTER JOIN food ON food_nutrient.fdc_id = food.fdc_id
+  WHERE food.fdc_id IS NULL
+);
 VACUUM;
