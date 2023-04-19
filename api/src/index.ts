@@ -1,5 +1,5 @@
 import { serve } from "@hono/node-server";
-import { like } from "drizzle-orm";
+import { like, sql } from "drizzle-orm";
 import { Hono } from "hono";
 import { db, food } from "./db";
 
@@ -15,7 +15,9 @@ app.get("/autocomplete", async (c) => {
     .from(food)
     .where(like(food.description, `%${text}%`))
     .limit(20)
+    .orderBy(sql`difference(${food.description}, ${text})`)
     .all();
+
   return c.json(results);
 });
 
