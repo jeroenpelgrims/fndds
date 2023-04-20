@@ -1,6 +1,6 @@
 import { and, eq, like, sql } from "drizzle-orm";
 import { Hono } from "hono";
-import { db, food, foodNutrients, nutrients } from "./db";
+import { db, food, foodNutrients, nutrients } from "../db";
 
 const foodRouter = new Hono();
 
