@@ -2,7 +2,7 @@
   "scripts": {
     "start": "tsx src/index.ts",
     "dev": "DATABASE_FILE=../food.db nodemon -e ts --exec \"tsx src/index.ts\"",
-    "build": "esbuild --bundle src/index.ts --format=esm --platform=node --outfile=build/server.js && cp node_modules/better-sqlite3/build/Release/better_sqlite3.node build"
+    "build": "esbuild --bundle src/index.ts --format=esm --platform=node --outfile=dist/server.js && mkdir -p dist/build && cp node_modules/better-sqlite3/build/Release/better_sqlite3.node ./dist/build"
   },
   "dependencies": {
     "@hono/node-server": "^0.4.0",
