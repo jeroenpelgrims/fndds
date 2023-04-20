@@ -39,7 +39,10 @@ export const foodNutrients = sqliteTable(
   })
 );
 
-export const sqlite = new Database("../food.db", { verbose: console.log });
+const databasePath = process.env.DATABASE_FILE as string;
+export const sqlite = new Database(databasePath, {
+  verbose: console.log,
+});
 sqlite.function("difference", { deterministic: true }, (a: any, b: any) => {
   return leven(a, b);
 });
