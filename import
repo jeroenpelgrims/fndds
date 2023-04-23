@@ -1,47 +1,81 @@
 .open food.db
 .mode csv
 
-CREATE TABLE nutrient(
+/***********
+  Nutrients
+***********/
+CREATE TABLE temp_nutrient(
   id INT PRIMARY KEY,
   name VARCHAR NOT NULL,
   unit_name VARCHAR NOT NULL,
   nutrient_nbr INT,
   rank INT
 );
-.import --skip 1 data/nutrient.csv nutrient
+CREATE TABLE nutrient(
+  id INT PRIMARY KEY,
+  name VARCHAR NOT NULL,
+  unit_name VARCHAR NOT NULL
+);
+.import --skip 1 data/nutrient.csv temp_nutrient
+-- Remove unwanted records
+DELETE FROM temp_nutrient WHERE name LIKE '%DO NOT USE%';
+-- Copy nutrients we want to keep.
+INSERT INTO nutrient(id, name, unit_name)
+SELECT tn.id, tn.name, tn.unit_name
+FROM temp_nutrient tn;
+-- Delete temp table
+DROP TABLE temp_nutrient;
 
-CREATE TABLE food(
+/******
+  Food
+******/
+CREATE TABLE temp_food(
   fdc_id INT PRIMARY KEY,
   data_type VARCHAR NOT NULL,
   description VARCHAR NOT NULL
 );
-.import --skip 1 data/food.csv food
+CREATE TABLE food(
+  fdc_id INT PRIMARY KEY,
+  description VARCHAR NOT NULL
+);
+.import --skip 1 data/food.csv temp_food
+-- Remove unwanted records
+DELETE FROM temp_food WHERE data_type != 'sr_legacy_food';
+-- Copy foods we want to keep.
+INSERT INTO food(fdc_id, description)
+SELECT tf.fdc_id, tf.description
+FROM temp_food tf;
+-- Delete temp table
+DROP TABLE temp_food;
 
+/****************
+  Food nutrients
+****************/
 CREATE TABLE temp_food_nutrient(
   id INT,
   fdc_id INT,
   nutrient_id INT,
   amount float
 );
-.import --skip 1 data/food_nutrient.csv temp_food_nutrient
 CREATE TABLE food_nutrient(
   fdc_id INT NOT NULL,
   nutrient_id INT NOT NULL,
   amount FLOAT NOT NULL,
   CONSTRAINT PK_food_nutrient PRIMARY KEY (fdc_id, nutrient_id),
   FOREIGN KEY(fdc_id) REFERENCES food(fdc_id) ON DELETE CASCADE,
-  FOREIGN KEY(nutrient_id) REFERENCES nutient(id)
+  FOREIGN KEY(nutrient_id) REFERENCES nutrient(id)
 );
+.import --skip 1 data/food_nutrient.csv temp_food_nutrient
+-- Only insert columns we want to keep.
 INSERT INTO food_nutrient(fdc_id, nutrient_id, amount)
-SELECT fdc_id, nutrient_id, amount
-FROM temp_food_nutrient;
+SELECT f.fdc_id, n.id, amount
+FROM temp_food_nutrient tfn
+INNER JOIN food f ON f.fdc_id = tfn.fdc_id
+INNER JOIN nutrient n ON n.id = tfn.nutrient_id;
+-- Delete temp table
 DROP TABLE temp_food_nutrient;
 
-DELETE FROM food WHERE data_type != 'sr_legacy_food';
-DELETE FROM food_nutrient WHERE food_nutrient.fdc_id IN (
-  SELECT food_nutrient.fdc_id
-  FROM food_nutrient
-  LEFT OUTER JOIN food ON food_nutrient.fdc_id = food.fdc_id
-  WHERE food.fdc_id IS NULL
-);
+/*****************
+  Compact DB size
+*****************/
 VACUUM;

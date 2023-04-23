@@ -29,7 +29,7 @@ foodRouter.get("/autocomplete", async (c) => {
 foodRouter.get("/:id", async (c) => {
   const id = Number.parseInt(c.req.param("id"));
 
-  const foodResult = await db
+  const foodResult = db
     .select({
       id: food.fdcId,
       description: food.description,
@@ -38,23 +38,21 @@ foodRouter.get("/:id", async (c) => {
     .where(eq(food.fdcId, id))
     .limit(1)
     .get();
-  const nutrientsResult = await db
-    .select()
+  const nutrientsResult = db
+    .select({
+      id: nutrients.id,
+      name: nutrients.name,
+      unit: nutrients.unitName,
+      per100Gram: foodNutrients.amount,
+    })
     .from(foodNutrients)
     .innerJoin(nutrients, eq(foodNutrients.nutrientId, nutrients.id))
     .where(eq(foodNutrients.foodId, id))
     .all();
 
-  const cleanNutrients = nutrientsResult.map((x) => ({
-    id: x.nutrient.id,
-    name: x.nutrient.name,
-    unit: x.nutrient.unitName,
-    per100Gram: x.food_nutrient.amount,
-  }));
-
   return c.json({
     food: foodResult,
-    nutrients: cleanNutrients,
+    nutrients: nutrientsResult,
   });
 });
 

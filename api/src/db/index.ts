@@ -13,8 +13,6 @@ export const nutrients = sqliteTable("nutrient", {
   id: integer("id").primaryKey(),
   name: text("name").notNull(),
   unitName: text("unit_name").notNull(),
-  nutrientNumber: integer("nutrient_nbr"),
-  rank: integer("rank"),
 });
 
 export const food = sqliteTable("food", {
