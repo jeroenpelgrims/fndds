@@ -47,4 +47,7 @@ sqlite.function("difference", { deterministic: true }, (a: any, b: any) => {
   return leven(a, b);
 });
 
-export const db = drizzle(sqlite, { logger: true });
+const isDevelopment = ["development", undefined].includes(process.env.NODE_ENV);
+export const db = drizzle(sqlite, {
+  logger: isDevelopment,
+});
