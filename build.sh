@@ -1,4 +1,4 @@
-#!/bin/bash          
+#!/usr/bin/env bash
 
 if [ ! -f data.zip ]
 then
@@ -12,6 +12,15 @@ else
 fi
 
 unzip -ud data data.zip
+
+# If the zip file contained a directory (issue from 2023-04)
+# copy files from this folder one level up
+if [ "$(find data -maxdepth 1 -printf %y)" = "dd" ]; then
+    echo "Fixing nested folder issue"
+    FOLDER=$(find data -maxdepth 1 -type d| tail -n 1)
+    cp "$FOLDER"/* data
+    rm -rf "$FOLDER"
+fi
 
 rm food.db
 sqlite3 -init ./import
