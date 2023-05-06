@@ -1,4 +1,4 @@
-import { and, eq, like, sql } from "drizzle-orm";
+import { and, eq, inArray, like, sql } from "drizzle-orm";
 import { Hono } from "hono";
 import { db, food, foodNutrients, nutrients } from "../db";
 
@@ -27,33 +27,44 @@ foodRouter.get("/autocomplete", async (c) => {
 });
 
 foodRouter.get("/:id", async (c) => {
-  const id = Number.parseInt(c.req.param("id"));
+  const ids = c.req
+    .param("id")
+    .split(",")
+    .map((x) => Number.parseInt(x));
 
-  const foodResult = db
+  const foods = db
     .select({
       id: food.fdcId,
       description: food.description,
     })
     .from(food)
-    .where(eq(food.fdcId, id))
-    .limit(1)
-    .get();
+    .where(inArray(food.fdcId, ids))
+    .all();
   const nutrientsResult = db
     .select({
       id: nutrients.id,
       name: nutrients.name,
       unit: nutrients.unitName,
       per100Gram: foodNutrients.amount,
+      foodId: foodNutrients.foodId,
     })
     .from(foodNutrients)
     .innerJoin(nutrients, eq(foodNutrients.nutrientId, nutrients.id))
-    .where(eq(foodNutrients.foodId, id))
+    .where(inArray(foodNutrients.foodId, ids))
     .all();
 
-  return c.json({
-    food: foodResult,
-    nutrients: nutrientsResult,
-  });
+  if (foods.length === 1) {
+    return c.json({
+      ...foods[0],
+      nutrients: nutrientsResult,
+    });
+  } else {
+    const json = foods.map((food) => ({
+      ...food,
+      nutrients: nutrientsResult.filter((x) => x.foodId === food.id),
+    }));
+    return c.json(json);
+  }
 });
 
 export default foodRouter;
