@@ -26,9 +26,9 @@ foodRouter.get("/autocomplete", async (c) => {
   return c.json(results);
 });
 
-foodRouter.get("/:id", async (c) => {
+foodRouter.get("/:ids", async (c) => {
   const ids = c.req
-    .param("id")
+    .param("ids")
     .split(",")
     .map((x) => Number.parseInt(x));
 
@@ -53,18 +53,11 @@ foodRouter.get("/:id", async (c) => {
     .where(inArray(foodNutrients.foodId, ids))
     .all();
 
-  if (foods.length === 1) {
-    return c.json({
-      ...foods[0],
-      nutrients: nutrientsResult,
-    });
-  } else {
-    const json = foods.map((food) => ({
-      ...food,
-      nutrients: nutrientsResult.filter((x) => x.foodId === food.id),
-    }));
-    return c.json(json);
-  }
+  const json = foods.map((food) => ({
+    ...food,
+    nutrients: nutrientsResult.filter((x) => x.foodId === food.id),
+  }));
+  return c.json(json);
 });
 
 export default foodRouter;
